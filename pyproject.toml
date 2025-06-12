@@ -1,0 +1,36 @@
+[project]
+name = "wifihide"
+version = "0.0.4"
+dependencies = [
+  "colorama>=0.4.6",
+  "pexpect>=4.9.0",
+  "macwifi>=0.0.5; os_name == 'darwin'",
+  "winwifi>=1.0.5; os_name == 'windows'",
+]
+authors = [
+  { name="Nikita Kravets", email="nikita.kravets@gmail.com" },
+]
+description = "Wi-Fi SSID and password change automation via router CLI."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+keywords = ["Wi-Fi", "security", "automation", "router", "CLI"]
+
+[project.urls]
+Homepage = "https://github.com/nikita-kravets/wifihide"
+Issues = "https://github.com/nikita-kravets/wifihide/issues"
+
+[project.scripts]
+wifihide = "wifihide.wifihide:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+wifihide = ["conf/settings.ini","conf/.ssid_*"]
