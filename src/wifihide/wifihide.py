@@ -2,7 +2,7 @@
  Wi-Fi SSID and password updater
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- Version 0.0.4 / June 2025
+ Version 0.0.5 / June 2025
  Author Nikita Kravets (nikita.kravets@gmail.com)
 
  Could be used to secure personal Wi-Fi by automation of periodic changing of its SSID and password
@@ -12,7 +12,7 @@
  .ssid_prefixes and .ssid_endings, containing lists of the beginigs and endings for creating 
  random SSID names.  
 
- Note, that Wi-Fi passwords are created by using a simple algorythm based on current date and microtime. 
+ Note, that Wi-Fi passwords are created by using a simple algorithm based on current date and microtime. 
 
  For more detailed information about usage please refer to README.md and pydoc.
 
@@ -28,6 +28,7 @@ import time
 import argparse
 import configparser
 import platform
+from importlib.metadata import version
 
 if platform.system() == "Darwin":
     try:
@@ -94,6 +95,7 @@ def parse_config(confpath: str) -> tuple:
     ROUTER = "ROUTER"
     POST_EXEC = "POST_EXEC"
     EXEC = "EXEC_"
+    MISC = "MISC"
     
     ssid_default = config[ROUTER]["ssid_default"]
     router_admin = config[ROUTER]["router_admin"] if "router_admin" in config[ROUTER]\
@@ -102,6 +104,7 @@ def parse_config(confpath: str) -> tuple:
             else os.getenv(ROUTER_PASS_ENV)
     botcmd_tpl = config[POST_EXEC]["botcmd_tpl"]
     mailcmd_tpl = config[POST_EXEC]["mailcmd_tpl"]
+    secret_phrase = config[MISC]["secret_phrase"].strip()
     
     commands = []
     commands.append(config[ROUTER]["conn_cmd"])
@@ -118,7 +121,7 @@ def parse_config(confpath: str) -> tuple:
             "append": (config[key]["append"] if "append" in config[key] else "")})
         i = i + 1 
 
-    return commands, ssid_default, router_admin, router_pass, botcmd_tpl, mailcmd_tpl
+    return commands, ssid_default, router_admin, router_pass, botcmd_tpl, mailcmd_tpl, secret_phrase
     
 def ssid_parts(confpath: str) -> list:
     """Populates a specific list with the lines of a given file.
@@ -222,20 +225,22 @@ def wifi_reconnect(ssid: str, password: str) -> bool:
  
     return reconnected
 
-def passwd_gen() -> tuple:
+def passwd_gen(secret_phrase: str = "") -> tuple:
     """Performs simple password generation based on current microtime and date.
-    Final password is a concatenation of both newpass and secret.
+    A password which should be used for Wi-Fi authentication is a concatenation 
+    of both: newpass and secret.
     Newpass along with SSID is sent to the target user who already 
     knows what is the secret part should be 
-    (here is the default: "-" + "2 digits, representing current date").
+    ("-" + "2 digits, representing current date" or a pre-configured secret prhase).
 
-    Modify this algorithm to comply you own security requirements.
+    Parameters:
+        secret: None or the vaule of the parameter secret_phrase
         
     Returns:
         New password divided in two parts as tuple.
     """
     newpass = "#" + str(hashlib.md5(str(datetime.datetime.now().microsecond).encode()).hexdigest())[3:9]
-    secret = "-" + str(datetime.date.today().day).rjust(2, "0")
+    secret = "-" + (str(datetime.date.today().day).rjust(2, "0") if not secret_phrase else secret_phrase)
 
     return newpass, secret
 
@@ -271,6 +276,7 @@ def main():
 
     def_ini = extend_path("settings.ini")
     check_necessary(def_ini)
+    parser.add_argument("--version","-V",help="print installed version",action='store_true')
     parser.add_argument("--config-file", type=str,
                         default=def_ini,
                         help=f"path to program configuration. default: {def_ini}")
@@ -285,10 +291,10 @@ def main():
                         default=def_end,
                         help=f"path to SSID ending list file. default: {def_end}")
     parser.add_argument("--send-mail", 
-                        help="if given, program will try to send out new credentials by mail using pre-configured command template from the settings.ini file.", 
+                        help="if given, program will try to send out new credentials by mail using pre-configured command template from the settings.ini file", 
                         action="store_true")
     parser.add_argument("--send-bot", 
-                        help="if given, program will try to send out new credentials via a Telegram bot using pre-configured command template from the settings.ini file.", 
+                        help="if given, program will try to send out new credentials via a Telegram bot using pre-configured command template from the settings.ini file", 
                         action="store_true")
 
     parsed, args = parser.parse_known_args()
@@ -296,7 +302,7 @@ def main():
     
     if os.path.exists(parsed.config_file):
         try:
-            commands, ssid_default, router_admin, router_pass, botcmd_tpl, mailcmd_tpl = \
+            commands, ssid_default, router_admin, router_pass, botcmd_tpl, mailcmd_tpl, secret_phrase = \
                     parse_config(parsed.config_file)
         except Exception:
             Logger.out(f"Config file {Style.BRIGHT}'{parsed.config_file}'{Style.RESET_ALL} invalid!", 
@@ -323,14 +329,20 @@ def main():
 
     argsp = vars(parsed)
 
-    send_mail = "send_mail" in argsp and argsp["send_mail"] is not None
-    send_bot = "send_bot" in argsp and argsp["send_bot"] is not None
+    if argsp["version"] == True:
+        print(f"Current version: {Style.BRIGHT}{Fore.RED}{version('wifihide')}{Style.RESET_ALL}")
+        return
+
+    send_mail = argsp["send_mail"] == True
+    send_bot = argsp["send_bot"] == True
 
     if not args_valid:
         return
     
     newssid = combine(ssid_prefixes, ssid_endings, ssid_default)
-    newpass, secret = passwd_gen()
+    newpass, secret = passwd_gen(secret_phrase)
+
+    print(secret)
 
     #prepare parameters for router commands
     params = {"ssid":newssid, "password": newpass + secret}
@@ -340,17 +352,19 @@ def main():
     botcmd = botcmd_tpl.format(newssid, newpass)
     
     # trying to get router admin username and password from env
-    Logger.out("Authenticating to router as Administrator", Logger.INFO)
+    Logger.out("Authenticating to router CLI", Logger.INFO)
 
     if not router_admin:
         router_admin = input("Login: ")
     else:
-        Logger.out("Using pre-configured router username", Logger.INFO)
+        Logger.out(f"Using pre-configured router username {Style.BRIGHT}{Fore.WHITE}{router_admin}{Style.RESET_ALL}", 
+                   Logger.INFO)
     
     if not router_pass:
         router_pass = getpass()
     else:
-        Logger.out("Using pre-configured router password", Logger.INFO)
+        Logger.out(f"Using pre-configured router password {Style.BRIGHT}{Fore.WHITE}******{Style.RESET_ALL}", 
+                   Logger.INFO)
 
     connected = False
 
