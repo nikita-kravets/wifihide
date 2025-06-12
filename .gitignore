@@ -1,16 +1,21 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
+# general things to ignore
+build/
+dist/
+*.egg-info/
+*.egg
 *.py[cod]
-*$py.class
-
-# C extensions
+__pycache__/
 *.so
+*~
+# due to using nox and pytest
+.nox
+.cache
+# Byte-compiled / optimized / DLL files
+*$py.class
 
 # Distribution / packaging
 .Python
-build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -21,9 +26,7 @@ sdist/
 var/
 wheels/
 share/python-wheels/
-*.egg-info/
 .installed.cfg
-*.egg
 MANIFEST
 
 # PyInstaller
