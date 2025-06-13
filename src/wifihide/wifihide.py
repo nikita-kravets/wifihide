@@ -249,7 +249,7 @@ def extend_path(file_name: str) -> str:
     app_name = os.path.basename(__file__).replace(".py", "")
 
     if platform.system() == "Windows":
-        return str(Path.home().joinpath(str(os.environ.get("localappdata")), app_namei, file_name))
+        return str(Path.home().joinpath(str(os.environ.get("localappdata")), app_name, file_name))
 
     return str(Path.home().joinpath(".config", app_name, file_name))
 
@@ -269,7 +269,7 @@ def check_necessary(path: str):
         if not os.path.exists(path):
             os.system(f"{copy_cmd} '{conf_dir}/{os.path.basename(path)}' '{path}'")
     except Exception as e:
-        Logger.out(f"An error '{str(e)}' occured while copying required config file!", Logger.ERROR)
+        Logger.out(f"An error '{str(e)}' occurred while copying required config file!", Logger.ERROR)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -342,12 +342,10 @@ def main():
     newssid = combine(ssid_prefixes, ssid_endings, ssid_default)
     newpass, secret = passwd_gen(secret_phrase)
 
-    print(secret)
-
-    #prepare parameters for router commands
+    # prepare parameters for router commands
     params = {"ssid":newssid, "password": newpass + secret}
 
-    #prepare notification commands
+    # prepare notification commands
     mailcmd = mailcmd_tpl.format(newssid, newpass)
     botcmd = botcmd_tpl.format(newssid, newpass)
     

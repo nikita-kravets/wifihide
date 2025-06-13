@@ -198,3 +198,4 @@ cython_debug/
 
 requirements.txt
 *.bak
+publish.sh

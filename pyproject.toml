@@ -1,6 +1,6 @@
 [project]
 name = "wifihide"
-version = "0.0.5"
+version = "0.0.6"
 dependencies = [
   "colorama>=0.4.6",
   "pexpect>=4.9.0",
