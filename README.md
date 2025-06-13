@@ -4,7 +4,7 @@ Wi-Fi SSID and password change automation via router CLI.
 
 #### Description
 
-The main purpose of this package is to secure Wi-Fi routers by using automatic change of the SSIDs and passwords (could be configured using system scheduler), which could mitigate undesirable third-party actions like Wi-Fi SSID surveillance, any possible hacking attempts such as observing and capturing Wi-Fi keys during connection negotiation process or bruteforcing passwords on a specific SSID.
+The main purpose of this package is to secure Wi-Fi routers by using automatic change of the SSIDs and passwords (could be configured using system scheduler), which could mitigate undesirable third-party actions like Wi-Fi SSID surveillance, any possible hacking attempts such as capturing Wi-Fi keys during connection negotiation process or bruteforcing passwords on a specific SSID. Additionally, since not all devices support connecting to a hidden SSIDs, there may be no option to secure your Wi-Fi other than changing its SSID periodically. 
 
 #### Configuration instructions
 
