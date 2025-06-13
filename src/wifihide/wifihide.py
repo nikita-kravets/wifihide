@@ -2,7 +2,7 @@
  Wi-Fi SSID and password updater
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- Version 0.0.5 / June 2025
+ Version 0.0.7 / June 2025
  Author Nikita Kravets (nikita.kravets@gmail.com)
 
  Could be used to secure personal Wi-Fi by automation of periodic changing of its SSID and password
@@ -272,7 +272,8 @@ def check_necessary(path: str):
         Logger.out(f"An error '{str(e)}' occurred while copying required config file!", Logger.ERROR)
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog="wifihide",
+                                     description="Wi-Fi router SSID and password automation.")
 
     def_ini = extend_path("settings.ini")
     check_necessary(def_ini)
@@ -291,15 +292,26 @@ def main():
                         default=def_end,
                         help=f"path to SSID ending list file. default: {def_end}")
     parser.add_argument("--send-mail", 
-                        help="if given, program will try to send out new credentials by mail using pre-configured command template from the settings.ini file", 
+                        help="if given, program will try to send out new credentials by mail "
+                        "using pre-configured command template from the settings.ini file", 
                         action="store_true")
     parser.add_argument("--send-bot", 
-                        help="if given, program will try to send out new credentials via a Telegram bot using pre-configured command template from the settings.ini file", 
+                        help="if given, program will try to send out new credentials via a Telegram bot "
+                        "using pre-configured command template from the settings.ini file", 
                         action="store_true")
 
     parsed, args = parser.parse_known_args()
     args_valid = True
     
+    argsp = vars(parsed)
+    
+    if argsp["version"] == True:
+        print(f"Current version: {Style.BRIGHT}{Fore.RED}{version('wifihide')}{Style.RESET_ALL}")
+        return
+
+    send_mail = argsp["send_mail"] == True
+    send_bot = argsp["send_bot"] == True
+  
     if os.path.exists(parsed.config_file):
         try:
             commands, ssid_default, router_admin, router_pass, botcmd_tpl, mailcmd_tpl, secret_phrase = \
@@ -316,25 +328,18 @@ def main():
     if os.path.exists(parsed.ssid_prefix_list_file):
         ssid_prefixes = ssid_parts(parsed.ssid_prefix_list_file)
     else:
-        Logger.out(f"SSID prefix file {Style.BRIGHT}'{parsed.ssid_prefix_list_file}'{Style.RESET_ALL} should exist!", 
+        Logger.out("SSID prefix file "
+                   f"{Style.BRIGHT}'{parsed.ssid_prefix_list_file}'{Style.RESET_ALL} should exist!", 
                    Logger.ERROR)
         args_valid = False
      
     if os.path.exists(parsed.ssid_ending_list_file):
         ssid_endings = ssid_parts(parsed.ssid_ending_list_file)
     else:
-        Logger.out(f"SSID ending file {Style.BRIGHT}'{parsed.ssid_ending_list_file}'{Style.RESET_ALL} should exist!", 
+        Logger.out("SSID ending file "
+                   f"{Style.BRIGHT}'{parsed.ssid_ending_list_file}'{Style.RESET_ALL} should exist!", 
                    Logger.ERROR)
         args_valid = False
-
-    argsp = vars(parsed)
-
-    if argsp["version"] == True:
-        print(f"Current version: {Style.BRIGHT}{Fore.RED}{version('wifihide')}{Style.RESET_ALL}")
-        return
-
-    send_mail = argsp["send_mail"] == True
-    send_bot = argsp["send_bot"] == True
 
     if not args_valid:
         return
@@ -355,13 +360,15 @@ def main():
     if not router_admin:
         router_admin = input("Login: ")
     else:
-        Logger.out(f"Using pre-configured router username {Style.BRIGHT}{Fore.WHITE}{router_admin}{Style.RESET_ALL}", 
+        Logger.out("Using pre-configured router username "
+                   f"{Style.BRIGHT}{Fore.WHITE}{router_admin}{Style.RESET_ALL}", 
                    Logger.INFO)
     
     if not router_pass:
         router_pass = getpass()
     else:
-        Logger.out(f"Using pre-configured router password {Style.BRIGHT}{Fore.WHITE}******{Style.RESET_ALL}", 
+        Logger.out("Using pre-configured router password "
+                   f"{Style.BRIGHT}{Fore.WHITE}******{Style.RESET_ALL}", 
                    Logger.INFO)
 
     connected = False
@@ -381,29 +388,43 @@ def main():
     if connected:
         terminal.close()
         if not wifi_reconnect(newssid, newpass + secret):
-            Logger.out(f"Please try to check new credentials manually: {Style.BRIGHT}{Fore.WHITE}SSID: {newssid}, Password: {newpass}{secret}{Style.RESET_ALL}", 
+            Logger.out("Please try to check new credentials manually: "
+                       f"{Style.BRIGHT}{Fore.WHITE}SSID: {newssid}, "
+                       f"Password: {newpass}{secret}{Style.RESET_ALL}", 
                        Logger.WARNING)
         else:
             Logger.out("Wi-Fi reconnection successful!")
 
+            send_result = True
+            
             # Post-exection procedures 
             # send mail using pre-configured command
             if mailcmd and send_mail:
-                Logger.out("Trying to send updated creds by email")
-                os.system(mailcmd)
+                Logger.out("Trying to send updated creds by email", Logger.INFO)
+                if os.system(mailcmd) != 0:
+                    send_result = False
 
             # send message via a Telegram bot using pre-configured command
             if botcmd and send_bot:
-                Logger.out("Trying to send updated creds to a Telegram bot")
-                os.system(botcmd)
+                Logger.out("Trying to send updated creds to a Telegram bot", Logger.INFO)
+                if os.system(botcmd) != 0:
+                    send_result = False
 
-            if not (send_mail or send_bot):
-                Logger.out("Neither --send-mail nor --send-bot parameter was given. Just output new creds to a terminal", 
-                           Logger.INFO)
-                Logger.out(f"{Style.BRIGHT}{Fore.WHITE}SSID: {newssid}, Password: {newpass}{secret}{Style.RESET_ALL}", 
+            if not (send_mail or send_bot) or not send_result:
+                if send_result:
+                    Logger.out("Neither --send-mail nor --send-bot parameter was given. "
+                               "Just output new creds to a terminal", 
+                               Logger.INFO)
+                else:
+                    Logger.out("It seems that notification failed! "
+                               "Showing creds here...",
+                               Logger.WARNING)
+                Logger.out(f"{Style.BRIGHT}{Fore.WHITE}SSID: {newssid}, "
+                           f"Password: {newpass}{secret}{Style.RESET_ALL}", 
                            Logger.INFO)
     else:
-        Logger.out("Please check if your configuration is valid, router is accessible and try again...", 
+        Logger.out("Please check if your configuration is valid, "
+                   "router is accessible and try again...", 
                    Logger.WARNING)
 
 if __name__ == "__main__":

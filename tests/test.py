@@ -7,7 +7,7 @@ from colorama import Fore, Style
 from wifihide import wifihide
 
 class FakeTerm:
-
+    """A simple emulator"""
     def __init__(self):
         self.__out = "(config)"
     
@@ -21,6 +21,7 @@ class FakeTerm:
             raise Exception("Expectation failed!")
 
 class Test(unittest.TestCase):
+    """A test for SSID and passwd generation"""
     def test_passwd_gen_default(self):
         newpass, secret = wifihide.passwd_gen()
         self.assertNotEqual(re.match(r"^#[a-f0-9]{6}$", newpass), None, 
@@ -50,7 +51,7 @@ class Test(unittest.TestCase):
 
         
 class TerminalTest(unittest.TestCase):
-    
+    """A test for a terminal connection using emulator"""
     def test_execute(self):
         result = True
         term = FakeTerm()
