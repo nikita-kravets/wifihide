@@ -21,17 +21,17 @@ The main purpose of this package is to secure Wi-Fi routers by using automatic c
 **wifihide** \[-h\] \[--version\] \[--config-file CONFIG\_FILE\] \[--ssid-prefix-list-file SSID\_PREFIX\_LIST\_FILE\] \[--ssid-ending-list-file SSID\_ENDING\_LIST\_FILE\] \[--send-mail\] \[--send-bot\]
 
 options:
-  -h, --help            show this help message and exit
-  --version, -V         print installed version
-  --config-file CONFIG\_FILE
+    -h, --help            show this help message and exit
+    --version, -V         print installed version
+    --config-file CONFIG\_FILE
                         path to program configuration
-  --ssid-prefix-list-file SSID\_PREFIX\_LIST\_FILE
+    --ssid-prefix-list-file SSID\_PREFIX\_LIST\_FILE
                         path to SSID prefix list file
-  --ssid-ending-list-file SSID\_ENDING\_LIST\_FILE
+    --ssid-ending-list-file SSID\_ENDING\_LIST\_FILE
                         path to SSID ending list file
-  --send-mail           if given, program will try to send out new credentials by mail using pre-configured
+    --send-mail           if given, program will try to send out new credentials by mail using pre-configured
                         command template from the settings.ini file
-  --send-bot            if given, program will try to send out new credentials via a Telegram bot using pre-
+    --send-bot            if given, program will try to send out new credentials via a Telegram bot using pre-
                         configured command template from the settings.ini file.
 
 #### Terms of use and licensing
