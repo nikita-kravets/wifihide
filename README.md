@@ -16,6 +16,24 @@ The main purpose of this package is to secure Wi-Fi routers by using automatic c
 
 **SECURITY WARNING!** It is strongly recommended **not to store** plain-text credentials anywhere if it does not correspond to your security policy. By leaving credentials empty you will be able to run program manually and perform router CLI authentication during each startup. In case when your router supports SSH key-based CLI authentication, it would be the best option to configure program to login via SSH.
 
+#### Usage
+
+**wifihide** \[-h\] \[--version\] \[--config-file CONFIG\_FILE\] \[--ssid-prefix-list-file SSID\_PREFIX\_LIST\_FILE\] \[--ssid-ending-list-file SSID\_ENDING\_LIST\_FILE\] \[--send-mail\] \[--send-bot\]
+
+options:
+  -h, --help            show this help message and exit
+  --version, -V         print installed version
+  --config-file CONFIG\_FILE
+                        path to program configuration
+  --ssid-prefix-list-file SSID\_PREFIX\_LIST\_FILE
+                        path to SSID prefix list file
+  --ssid-ending-list-file SSID\_ENDING\_LIST\_FILE
+                        path to SSID ending list file
+  --send-mail           if given, program will try to send out new credentials by mail using pre-configured
+                        command template from the settings.ini file
+  --send-bot            if given, program will try to send out new credentials via a Telegram bot using pre-
+                        configured command template from the settings.ini file.
+
 #### Terms of use and licensing
 
 This software is distributed "AS IS" under a MIT license. You can use, modify, redistribute it as a part of any software product. Use it at your own risk. Author is not responsible for any potential damage, data loss or other dire consequences caused by use of this project or its components. For detailed licensing information please refer to the LICENSE file.
